@@ -11,6 +11,9 @@
     - [Declarative Programming](#declarative-programming)
       - [Expanding/Collapsing an Accordion control](#expandingcollapsing-an-accordion-control)
       - [Opening and Closing a Dialog](#opening-and-closing-a-dialog)
+  - [useRef and Forms](#useref-and-forms)
+    - [Controlled Inputs](#controlled-inputs)
+    - [Uncontrolled Inputs](#uncontrolled-inputs)
   - [useEffect](#useeffect)
     - [Limit When an Effect Runs](#limit-when-an-effect-runs)
     - [Focusing an Input Automatically](#focusing-an-input-automatically)
@@ -543,6 +546,99 @@ The declarative way: Whether or not the Modal is open is a state. It’s either 
 ```
 
 Whenever you can, it’s best to keep components stateless. Components without state are easier to write, and easier to reason about. Sometimes this isn’t possible, but often, pieces of data you initially think should go into internal state can actually be lifted up to the parent component, or even higher.
+
+## useRef and Forms
+
+### Controlled Inputs
+
+You are responsible for controlling their state and need to pass in a value, and keep that value updated as the user types.
+
+```js
+import React, { useState } from "react";
+import ReactDOM from "react-dom";
+
+const ControlledInputFn = () => {
+  const [text, setText] = useState("");
+
+  const handleChange = event => {
+    setText(event.target.value);
+  };
+
+  return <input type="text" value={text} onChange={handleChange} />;
+};
+
+const rootElement = document.getElementById("root");
+ReactDOM.render(<ControlledInputFn />, rootElement);
+
+```
+
+We create a piece of state to hold the input’s value, and store that in text. Every time you press a key, the handleChange function will get called with the input’s current value (the whole thing, not just the most recent key).
+
+Note the value prop - tells the input what to display.
+
+Try removing or commenting out the call to setText, then try to type in the box. Nothing happens because the value is stuck at the initial value.
+
+Try changing setText to ignore the event data, and instead always setting the text to the same value, like this:
+
+```js
+const TrickInput = () => {
+  const [text, setText] = useState("try typing something");
+
+  const handleChange = event => {
+    setText("haha nope");
+  };
+
+  return <input type="text" value={text} onChange={handleChange} />;
+};
+```
+
+This technique is useful if you need custom validation or formatting, because you can do both in the handleChange function. Don’t want the user to type numbers? Strip out the numbers before updating the state:
+
+```js
+const NoNumbersInput = () => {
+  const [text, setText] = useState("");
+
+  const handleChange = event => {
+    let text = event.target.value;
+    setText(text.replace(/[0-9]/g, ""));
+  };
+
+  return <input type="text" value={text} onChange={handleChange} />;
+};
+```
+
+### Uncontrolled Inputs
+
+When an input is uncontrolled, it manages its own internal state. 
+
+```js
+const EasyInput = () => <input type="text" />;
+```
+
+When you want to get a value out of it you can use a ref. A ref gives you access to the input’s underlying DOM node, so you can pull out its value directly.
+
+In function components, we can call the useRef hook to create an empty ref, and then pass that into a ref prop on the input.
+
+```js
+const RefInput = () => {
+  const input = useRef();
+
+  const showValue = () => {
+    alert(`Input contains: ${input.current.value}`);
+  };
+
+  return (
+    <div>
+      <input type="text" ref={input} />
+      <button onClick={showValue}>Alert the Value!</button>
+    </div>
+  );
+};
+```
+
+Pass the ref prop a ref object, and, when the component mounts, React will save the DOM node into the ref’s current property.
+
+
 
 ## useEffect
 
