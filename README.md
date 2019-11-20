@@ -527,4 +527,422 @@ The declarative way: Whether or not the Modal is open is a state. It’s either 
 
 Whenever you can, it’s best to keep components stateless. Components without state are easier to write, and easier to reason about. Sometimes this isn’t possible, but often, pieces of data you initially think should go into internal state can actually be lifted up to the parent component, or even higher.
 
+# useEffect
 
+Adding lifecycle methods to class components allow you to “make things happen” at specific times – say, after a component mounts, or after it re-renders.
+
+The generic name for these actions is “side effects”, a term that comes from functional programming. In the ideal world, you could implement your UI as a pure function of props and state: given a specific set of state like this, the app should look like that. That’s the core idea behind React, and it works well most of the time.
+
+Sometimes though, you need to do something that doesn’t fit within that box. That could be kicking off a request to fetch data, or focusing an input control when the page loads. Basically, anything that doesn’t fit the paradigm of stateful updates can be handled by a side effect.
+
+With the useEffect hook, you can respond to lifecycle events directly inside function components. Namely, three of them: componentDidMount, componentDidUpdate, and componentWillUnmount. All with one function!
+
+Remember that every change to props or state will cause a component to re-render. On every render, useEffect will have a chance to run. By default, your effects will execute on every render, but we’ll see how to limit how often they run.
+
+Think of useEffect as “if-this-then-that” for your React components.
+Let’s create a project where we can play around with useEffect. Create an empty project and open up the index.js file.
+
+```sh
+$ create-react-app useeffect-hook 
+$ cd useeffect-hook
+$ rm src/*
+$ touch src/index.js
+```
+
+```js
+import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
+
+const LogEffect = () => {
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    console.log("latest value: ", text);
+  });
+
+  return <input value={text} onChange={e => setText(e.target.value)} />;
+};
+
+ReactDOM.render(<LogEffect />, document.querySelector("#root"));
+```
+
+Start up the example with npm start and open up the console. 
+
+Note the app logged “latest value:” even though you haven’t typed anything into the box. That’s because useEffect runs after the initial render. It always runs after the initial render, and there’s no way to turn that off. (Similar to componentDidMount.)
+
+Now try typing in the box, and you’ll see that it logs a message for every character you type. That’s because the effect is running on (after) every render.
+
+## Limit When an Effect Runs
+
+Often, you’ll only want an effect to run in response to a specific change. Maybe when a prop’s value changes, or a change occurs to state. That’s what the second argument of useEffect is for: it’s a list of dependencies.
+
+Example: “If the blogPostId prop changes, then download that blog post and display it”:
+
+```js
+useEffect(() => { fetch(`/posts/${blogPostId}`)
+.then(content => setContent(content)
+    )
+}, [blogPostId])
+```
+
+Example: “If the username changes, then save it to localStorage”:
+
+```js
+useEffect(() => { 
+  localStorage.setItem('username', username)
+}, [username])
+```
+
+## Focusing an Input Automatically
+
+Focus an input control upon first render, using useEffect combined with the useRef hook.
+
+```js
+import React, { useEffect, useState, useRef } from "react";
+import ReactDOM from "react-dom";
+
+function App() {
+  // Store a reference to the input's DOM node
+  const inputRef = useRef();
+  // Store the input's value in state
+  const [value, setValue] = useState("");
+
+  useEffect(() => {
+    console.log("render");
+    inputRef.current.focus();
+  }, [inputRef]);
+
+  return (
+    <input
+      ref={inputRef}
+      value={value}
+      onChange={e => setValue(e.target.value)}
+    />
+  );
+}
+ReactDOM.render(<App />, document.querySelector("#root"));
+
+```
+
+
+```js
+import React, { useEffect, useState, useRef } from "react";
+import ReactDOM from "react-dom";
+
+function App() {
+  // Store a reference to the input's DOM node
+  const inputRef = useRef();
+  // Store the input's value in state
+  const [value, setValue] = useState("");
+
+  useEffect(() => {
+    console.log("mounted");
+    return () => console.log("unmounting...");
+  }, []); // <-- add this empty array here
+
+  return (
+    <input
+      ref={inputRef}
+      value={value}
+      onChange={e => setValue(e.target.value)}
+    />
+  );
+}
+ReactDOM.render(<App />, document.querySelector("#root"));
+
+```
+
+Danger zone:
+
+```js
+import React, { useEffect, useState, useRef } from "react";
+import ReactDOM from "react-dom";
+
+function Reddit() {
+  const [posts, setPosts] = useState([]);
+  useEffect(() => {
+    fetch("https://www.reddit.com/r/reactjs.json")
+      .then(res => res.json())
+      .then(json => setPosts(json.data.children.map(c => c.data)));
+    console.log("ran");
+  }); // <-- we didn't pass the 2nd arg. what will happen?
+
+  return (
+    <ul>
+      {posts.map(post => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  );
+}
+
+ReactDOM.render(<Reddit />, document.querySelector("#root"));
+
+```
+
+Passing no 2nd argument causes the useEffect to run every render. Then, when it runs, it fetches the data and later updates the state. Once the state is updated, the component re-renders, which triggers the useEffect again. 
+
+Re-fetch When Data Changes
+
+Let’s expand on the example to cover another common problem: how to re-fetch data when some- thing changes, like a user ID, or in this case, the name of the subreddit.
+
+First we’ll change the Reddit component to accept the subreddit as a prop, fetch the data based on that subreddit, and only re-run the effect when the prop changes:
+
+```js
+import React, { useEffect, useState, useRef } from "react";
+import ReactDOM from "react-dom";
+
+function Reddit({ subreddit }) {
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    fetch(`https://www.reddit.com/r/${subreddit}.json`)
+      .then(res => res.json())
+      .then(json => setPosts(json.data.children.map(c => c.data)));
+    console.log("ran");
+  }, [subreddit, setPosts]);
+
+  return (
+    <ul>
+      {posts.map(post => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  );
+}
+
+ReactDOM.render(
+  <Reddit subreddit="reactjs" />,
+  document.querySelector("#root")
+);
+
+```
+
+This is still hard-coded, but now we can customize it by wrapping the Reddit component with one that lets us change the subreddit. Add this new App component, and render it at the bottom:
+
+```js
+import React, { useEffect, useState, useRef } from "react";
+import ReactDOM from "react-dom";
+
+function Reddit({ subreddit }) {
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    fetch(`https://www.reddit.com/r/${subreddit}.json`)
+      .then(res => res.json())
+      .then(json => setPosts(json.data.children.map(c => c.data)));
+    console.log("ran");
+  }, [subreddit, setPosts]);
+
+  return (
+    <ul>
+      {posts.map(post => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  );
+}
+
+function App() {
+  const [inputValue, setValue] = useState("reactjs");
+  const [subreddit, setSubreddit] = useState(inputValue);
+  const handleSubmit = e => {
+    e.preventDefault();
+    setSubreddit(inputValue);
+  };
+
+  return (
+    <>
+      <form onSubmit={handleSubmit}>
+        {" "}
+        <input value={inputValue} onChange={e => setValue(e.target.value)} />
+      </form>
+      <Reddit subreddit={subreddit} />{" "}
+    </>
+  );
+}
+
+ReactDOM.render(<App />, document.querySelector("#root"));
+
+```
+
+The app is keeping 2 pieces of state here – the current input value, and the current subreddit. Submit- ting the input will “commit” the subreddit, which will cause Reddit to re-fetch the data from the new selection. Wrapping the input in a form allows the user to press Enter to submit.
+
+Type carefully! There’s no error handling. If you type a subreddit that doesn’t exist, the app will blow up. (You’ll add some error handling in the exercises!)
+
+We could’ve used just 1 piece of state here – to store the input, and send the same value down to Reddit – but then the Reddit component would be fetching data with every keypress.
+
+The useState at the top might look a little odd, especially the second line:
+
+```js
+const [inputValue, setValue] = useState("reactjs"); 
+const [subreddit, setSubreddit] = useState(inputValue);
+```
+
+We’re passing an initial value of “reactjs” to the first piece of state, and that makes sense. That value will never change.
+
+But what about that second line? What if the initial state changes? (and it will, when you type in the box)
+
+Remember that useState is stateful. It only uses the initial state once, the first time it renders. After that it’s ignored. So it’s safe to pass a transient value, like a prop that might change or some other variable.
+
+Making Visible DOM Changes
+
+The useEffect function is like the swiss army knife of hooks. It can be used for a ton of things, from setting up subscriptions to creating and cleaning up timers to changing the value of a ref.
+
+One thing it’s not good for is making DOM changes that are visible to the user. The way the timing works, an effect function will only fire after the browser is done with layout and paint – too late, if you wanted to make a visual change.
+
+For those cases, React provides the useLayoutEffect hook. It works the same as useEffect in terms of the arguments it takes. The only difference is that it will run at the same time as componentDidMount would have – that is, it runs synchronously between when browser has updated the DOM and before those changes are painted to the screen.
+
+Most of the time, useEffect is the one you want. And because useEffect runs after layout and paint, a slow effect won’t make the UI janky.
+
+But if your effect needs to measure DOM elements or change them in some visible way, then write that in a useLayoutEffect.
+
+```js
+const Demo = () => (
+  <>
+    <h2>Logging Example</h2>
+    <LogEffect />
+    <h2>Reddit Example</h2>
+    <RedditInput />
+  </>
+);
+
+ReactDOM.render(<Demo />, document.querySelector("#root"));
+```
+
+
+1. Render an input box and store its value with useState. Then set the document.title in an effect, keeping the page’s title in sync with the input.
+
+```js
+import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
+
+const App = () => {
+  // Initialize the title from the document's title
+  const [title, setTitle] = useState(document.title);
+
+  useEffect(() => {
+    // Since we're modifying something outside the
+    // component, it needs to be done inside a useEffect.
+    //
+    // So here we set the title, and the `title` state is
+    // guaranteed to be the most recent value.
+    document.title = title;
+  });
+
+  return (
+    <label>
+      Enter a new title:
+      <input
+        value={title}
+        /* 
+          just setting state here, not changing the
+          document.title directly!
+        */
+        onChange={e => setTitle(e.target.value)}
+      />
+    </label>
+  );
+};
+
+ReactDOM.render(<App />, document.querySelector("#root"));
+
+```
+
+
+2. Add a click handler to the document, and print a message every time the user clicks. (don’t forget to clean up the handler!)
+
+```js
+import React, { useEffect } from "react";
+import ReactDOM from "react-dom";
+
+const App = () => {
+  useEffect(() => {
+    const announceClick = e => console.log("clicked!", e.clientX, e.clientY);
+
+    // Set up a listener for the click event.
+    // We're passing a function here so that we can pass
+    // the same function to removeEventListener and clean
+    // it up.
+    document.addEventListener("click", announceClick);
+    return () =>
+      // When the effect is cleaned up, remove the click handler
+      document.removeEventListener("click", announceClick);
+  }, []); // only run once, on mount
+
+  return <div>click anywhere!</div>;
+};
+
+ReactDOM.render(<App />, document.querySelector("#root"));
+
+```
+
+
+3. The Reddit example from this chapter is lacking error handling, and if you enter an invalid subreddit name, the app will break. Add code to intercept errors, handle them gracefully, and display an error message.
+
+
+```js
+import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
+
+// 1. Destructure the `subreddit` from props:
+function Reddit({ subreddit }) {
+  const [posts, setPosts] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Clear the error & data before fetching new data
+    setError(null);
+    setPosts([]);
+
+    // Fetch posts
+    fetch(`https://www.reddit.com/r/${subreddit}.json`)
+      .then(res => {
+        if (res.ok) {
+          return res;
+        }
+        throw new Error("Could not fetch posts");
+      })
+      .then(res => res.json())
+      .then(json =>
+        // Save the posts into state
+        setPosts(json.data.children.map(c => c.data))
+      )
+      .catch(error => {
+        // Save the error in state
+        setError(error.message);
+      });
+  }, [subreddit, setPosts]);
+
+  return (
+    <ul>
+      {error ? error : posts.map(post => <li key={post.id}>{post.title}</li>)}
+    </ul>
+  );
+}
+
+function App() {
+  // 2 pieces of state: one to hold the input value,
+  // another to hold the current subreddit.
+  const [inputValue, setValue] = useState("reactjs");
+  const [subreddit, setSubreddit] = useState(inputValue);
+
+  // Update the subreddit when the user presses enter
+  const handleSubmit = e => {
+    e.preventDefault();
+    setSubreddit(inputValue);
+  };
+
+  return (
+    <>
+      <form onSubmit={handleSubmit}>
+        <input value={inputValue} onChange={e => setValue(e.target.value)} />
+      </form>
+      <Reddit subreddit={subreddit} />
+    </>
+  );
+}
+
+ReactDOM.render(<App />, document.querySelector("#root"));
+
+```
