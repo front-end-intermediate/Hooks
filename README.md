@@ -38,7 +38,9 @@ class OneTimeButton extends React.Component {
     clicked: false
   };
   handleClick = () => {
-    // The handler won't be called if the button // is disabled, so if we got here, it's safe // to trigger the click.
+    // The handler won't be called if the button 
+    // is disabled, so if we got here, it's safe 
+    // to trigger the click.
     this.props.onClick();
     // Ok, no more clicking.
     this.setState({ clicked: true });
