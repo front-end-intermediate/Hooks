@@ -1,4 +1,21 @@
-# useState
+# Hooks
+
+- [Hooks](#hooks)
+  - [useState](#usestate)
+    - [Update State Based on Previous State](#update-state-based-on-previous-state)
+    - [State as an Array](#state-as-an-array)
+    - [State as an Object](#state-as-an-object)
+    - [Exercises](#exercises)
+    - [State](#state)
+    - [Should Props Go in State?](#should-props-go-in-state)
+    - [Declarative Programming](#declarative-programming)
+      - [Expanding/Collapsing an Accordion control](#expandingcollapsing-an-accordion-control)
+      - [Opening and Closing a Dialog](#opening-and-closing-a-dialog)
+  - [useEffect](#useeffect)
+    - [Limit When an Effect Runs](#limit-when-an-effect-runs)
+    - [Focusing an Input Automatically](#focusing-an-input-automatically)
+
+## useState
 
 Create a new project called “usestate” and start off with a blank index.js:
 
@@ -88,7 +105,7 @@ Now I bet you have a lot of questions. Things like...
 2. Only call hooks from React function components, or from custom hooks (we’ll learn about those later). Don’t call them from outside a component (what would that even do?). Keeping all the calls inside components and custom hooks makes your code easier to follow too, because all the related logic is grouped together.
 3. The names of custom hooks must start with “use”. 
 
-## Update State Based on Previous State
+### Update State Based on Previous State
 
 We’ll build a, uh, “step tracker.” Every time you take a step, simply click the button. At the end of the day, it will tell you how many steps you took. 
 
@@ -112,7 +129,7 @@ function StepTracker() {
 
 We've extracted the increment function, instead of inlining the arrow function on the button’s onClick prop.
 
-## State as an Array
+### State as an Array
 
 Here’s an example of a list of random numbers. Clicking the button adds a new random number to the list:
 
@@ -149,7 +166,7 @@ The state updater function (setItems, here) doesn’t “merge” new values wit
 
 In order to add an item to the array, we’re using the ES6 spread operator ... to copy the existing items into the new array, and inserting the new item at the end.
 
-## State as an Object
+### State as an Object
 
 Since the setter function returned by useState will overwrite the state each time you call it, it works differently from the class-based this.setState.
 
@@ -197,7 +214,7 @@ If your state is a complex value like an object or array, you need to take care,
 
 The ... spread operator is a big help for making copies of arrays and objects.
 
-## Exercises
+### Exercises
 
 1. Create a Room component with a “lightswitch” button and some text describing“The room is lit” or “The room is dark”. Clicking the button should toggle the light on and off, and update the text. Use the useState hook to store the lightswitch state.
 
@@ -471,7 +488,7 @@ ReactDOM.render(
 );
 ```
 
-## State
+### State
 
 How do you decide what should go into state?
 
@@ -486,7 +503,7 @@ Some things that make sense to put in state:
 - Data from the server (a list of recipes, the number of “likes”) 
 - Open/closed state (modal open/closed, sidebar expanded/hidden)
 
-## Should Props Go in State?
+### Should Props Go in State?
 
 
 You should avoid copying props into state. It creates a second source of truth for your data, which usually leads to bugs. If you ever find yourself copying a prop into state and then thinking, “Now how am I going to keep this updated?” – take a step back and rethink.
@@ -494,13 +511,13 @@ You should avoid copying props into state. It creates a second source of truth f
 
 Components automatically re-render when their parents do, and receive fresh props each time, so there’s no need to duplicate the props into state and then try to keep it up to date.
 
-## Declarative Programming
+### Declarative Programming
 
 If you came from a framework or language where you primarily call functions to make things happen in a certain order (“imperative programming”), you need to adjust your mental model in order to work effectively with React. You’ll adjust pretty quickly with practice – you just need a few new examples or “patterns”
 
 For example:
 
-### Expanding/Collapsing an Accordion control
+#### Expanding/Collapsing an Accordion control
 
 The old way: Clicking a toggle button opens or closes the accordion by calling its toggle function.
 The Accordion knows whether it is open or closed.
@@ -512,7 +529,7 @@ The declarative way: The Accordion can be displayed in either the “open” sta
 <Accordion isOpen={false}/>
 ```
 
-### Opening and Closing a Dialog
+#### Opening and Closing a Dialog
 
 The old way: Clicking a button opens the modal. Clicking its Close button closes it.
 
@@ -527,7 +544,7 @@ The declarative way: Whether or not the Modal is open is a state. It’s either 
 
 Whenever you can, it’s best to keep components stateless. Components without state are easier to write, and easier to reason about. Sometimes this isn’t possible, but often, pieces of data you initially think should go into internal state can actually be lifted up to the parent component, or even higher.
 
-# useEffect
+## useEffect
 
 Adding lifecycle methods to class components allow you to “make things happen” at specific times – say, after a component mounts, or after it re-renders.
 
@@ -572,7 +589,7 @@ Note the app logged “latest value:” even though you haven’t typed anything
 
 Now try typing in the box, and you’ll see that it logs a message for every character you type. That’s because the effect is running on (after) every render.
 
-## Limit When an Effect Runs
+### Limit When an Effect Runs
 
 Often, you’ll only want an effect to run in response to a specific change. Maybe when a prop’s value changes, or a change occurs to state. That’s what the second argument of useEffect is for: it’s a list of dependencies.
 
@@ -593,7 +610,7 @@ useEffect(() => {
 }, [username])
 ```
 
-## Focusing an Input Automatically
+### Focusing an Input Automatically
 
 Focus an input control upon first render, using useEffect combined with the useRef hook.
 
