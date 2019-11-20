@@ -2,10 +2,11 @@
 
 - [Hooks](#hooks)
   - [useState](#usestate)
+    - [Rules of Hooks](#rules-of-hooks)
     - [Update State Based on Previous State](#update-state-based-on-previous-state)
     - [State as an Array](#state-as-an-array)
     - [State as an Object](#state-as-an-object)
-    - [Exercises](#exercises)
+    - [Code Sandbox Exercises](#code-sandbox-exercises)
     - [State](#state)
     - [Should Props Go in State?](#should-props-go-in-state)
     - [Declarative Programming](#declarative-programming)
@@ -82,37 +83,34 @@ function OneTimeButtonFn({ onClick }) {
 }
 ```
 
-useState is a hook because its name starts with “use” (that’s one of the Rules of Hooks – their names must start with “use”).
+The useState hook takes the initial state as an argument (we passed false) and it returns an array with 2 elements: 
 
-The useState hook takes the initial state as an argument (we passed false) and it returns an array with 2 elements: the current state, and a function to change the state.
+- the current state
+- a function to change the state
 
-Class components have one big state object, and a function this.setState to change the whole thing at once (plus it shallow-merges the new value).
+Class components have one big state object, and a function `this.setState` to change the whole thing at once.
 
 Function components come with no state at all, but the useState hook allows us to add little nuggets of state as we need them. So if all we need is a single boolean, we can create a bit of state to hold that.
 
-Since we’re creating these pieces of state in a sort of ad-hoc way, and there’s no component-wide setState function, it makes sense that we’d need a function for updating each piece of state. So it’s a pair: one value, one function.
+Since we’re creating these pieces of state in a ad-hoc manner, and there’s no component-wide setState function, it makes sense that we’d need a function for updating each piece of state. So it’s a pair: one value, one function.
 
 Each useState can store one value, and the value can be any JS type – a number, boolean, object, array, etc.
 
-The bracket syntax [clicked, setClicked] = ... to the left of the equal sign is array destructuring, and that’s built in to JavaScript since ES6 (it’s not a special hooks thing). It works similarly to object destructuring we’ve been using throughout the book, except that because array elements don’t have names, you get to assign names to the items when you destructure them.
+The bracket syntax `[clicked, setClicked] = ...` to the left of the equals sign is ES6 array destructuring - not  special hooks syntax. 
 
-With useState it’s common to name the returned values like foo and setFoo, but you can call them whatever you like. The first element is the current value, and the second element is a setter function.
+Array destructuring works similarly to object destructuring we’ve been using throughout the class, except that because array elements don’t have names, you assign names to the items when you destructure them.
 
-Now I bet you have a lot of questions. Things like...
+With useState it’s common to name the returned values e.g. `foo` and `setFoo`, but you can call them whatever you like. The first element is the current value, and the second element is a setter function.
 
-- How does React know what the old state was? When the component re-renders... won’t the state get re-created every time?
-- How can I store more complex state? I have to keep track of more than one value.
-- Why do hook names have to start with “use”? 
-- If there’s a rule about naming... does that mean I can make my own hooks?
-
+### Rules of Hooks
 
 1. Only call hooks at the top level of your function. Don’t put them in loops, conditionals, or nested functions. In order for React to keep track of your hooks, the same ones need to be called in the same order every single time. If you called useState from inside an if, for instance, and it ran during the first render but got skipped during the second, React would be very confused.
-2. Only call hooks from React function components, or from custom hooks (we’ll learn about those later). Don’t call them from outside a component (what would that even do?). Keeping all the calls inside components and custom hooks makes your code easier to follow too, because all the related logic is grouped together.
+2. Only call hooks from React function components or from custom hooks. Don’t call them from outside a component. Keeping all the calls inside components and custom hooks makes your code easier to follow because all the related logic is grouped together.
 3. The names of custom hooks must start with “use”. 
 
 ### Update State Based on Previous State
 
-We’ll build a, uh, “step tracker.” Every time you take a step, simply click the button. At the end of the day, it will tell you how many steps you took. 
+Build a step tracker. Every time you take a step, click the button. At the end of the day, it will tell you how many steps you took. 
 
 ```js
 function StepTracker() {
@@ -136,7 +134,7 @@ We've extracted the increment function, instead of inlining the arrow function o
 
 ### State as an Array
 
-Here’s an example of a list of random numbers. Clicking the button adds a new random number to the list:
+Build a random number generator. Clicking the button adds a new random number to the UI list:
 
 ```js
 function RandomList() {
@@ -154,30 +152,32 @@ function RandomList() {
 
   return (
     <>
-      <button onClick={addItem}>Add a number</button>{" "}
+      <button onClick={addItem}>Add a number</button>
       <ul>
         {items.map(item => (
           <li key={item.id}>{item.value}</li>
         ))}
-      </ul>{" "}
+      </ul>
     </>
   );
 }
 ```
 
-Note: we’re initializing the state to an empty array [], and take a look at the addItem function. 
+Note: we’re initializing the state to an empty array [], and note the addItem function. 
 
-The state updater function (setItems, here) doesn’t “merge” new values with old – it overwrites the state with the new value. This is a departure from the way this.setState worked in classes.
+The state updater function (here setItems) doesn’t “merge” new values with old – it overwrites the state with the new value. 
 
-In order to add an item to the array, we’re using the ES6 spread operator ... to copy the existing items into the new array, and inserting the new item at the end.
+In order to add an item to the array, we’re using the ES6 spread operator `...` to copy the existing items into the new array, and inserting the new item at the end.
 
 ### State as an Object
 
-Since the setter function returned by useState will overwrite the state each time you call it, it works differently from the class-based this.setState.
+Since the setter function returned by useState will overwrite the state each time you call it, it works differently from the class-based `this.setState`.
 
-`this.setState` would shallow-merge the object you passed it into the existing state, taking care not to clobber the other stuff in there.
+`this.setState` would shallow-merge the object you passed it into the existing state, taking care not to clobber the other state already in there.
 
-The useState setter, instead, will clobber everything. It replaces the entire value with whatever you pass in. Here’s an example where state is an object with a couple values:
+The useState setter, instead, will clobber everything. It replaces the entire value with whatever you pass in. 
+
+Build an example where state is an object with a couple values:
 
 ```js
 const MultiCounter = () => {
@@ -217,22 +217,27 @@ const MultiCounter = () => {
 
 If your state is a complex value like an object or array, you need to take care, when updating it, to copy in all the other parts that you don’t intend to change. 
 
-The ... spread operator is a big help for making copies of arrays and objects.
+The `...` spread operator is the principal means for making copies of arrays and objects.
 
-### Exercises
+### Code Sandbox Exercises
 
-1. Create a Room component with a “lightswitch” button and some text describing“The room is lit” or “The room is dark”. Clicking the button should toggle the light on and off, and update the text. Use the useState hook to store the lightswitch state.
+1. Create a Room component with a “lightswitch” button and some text describing “The room is lit” or “The room is dark”. Clicking the button should toggle the light on and off, and update the text. Use the useState hook to store the lightswitch state.
 
 ```css
 html,
 body,
 #root,
 .room {
-  height: 100%;
+  height: 100vh;
   margin: 0;
   text-align: center;
-  font-family: 'Georgia', serif;
-  font-size: 20px;
+  font-family: "Georgia", serif;
+  font-size: 1.5rem;
+}
+
+button {
+  padding: 0.25rem 0.5rem;
+  font-size: 1rem;
 }
 
 .room {
@@ -249,12 +254,14 @@ body,
   color: white;
 }
 
+
 ```
 
 ```js
-import React, { useState } from "react";
+import React, {useState} from "react";
 import ReactDOM from "react-dom";
-import "./index.css";
+
+import "./styles.css";
 
 const Room = () => {
   const [isLightOn, setLight] = useState(true);
@@ -274,7 +281,9 @@ const Room = () => {
   );
 };
 
-ReactDOM.render(<Room />, document.getElementById("root"));
+const rootElement = document.getElementById("root");
+ReactDOM.render(<Room />, rootElement);
+
 
 ```
 
@@ -869,10 +878,10 @@ function App() {
   return (
     <>
       <form onSubmit={handleSubmit}>
-        {" "}
+        
         <input value={inputValue} onChange={e => setValue(e.target.value)} />
       </form>
-      <Reddit subreddit={subreddit} />{" "}
+      <Reddit subreddit={subreddit} />
     </>
   );
 }
