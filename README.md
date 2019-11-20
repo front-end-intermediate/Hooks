@@ -8,8 +8,9 @@
     - [State as an Object](#state-as-an-object)
     - [Code Sandbox Exercises](#code-sandbox-exercises)
     - [State](#state)
-    - [Should Props Go in State?](#should-props-go-in-state)
+    - [Props in State?](#props-in-state)
     - [Declarative Programming](#declarative-programming)
+    - [Examples](#examples)
       - [Expanding/Collapsing an Accordion control](#expandingcollapsing-an-accordion-control)
       - [Opening and Closing a Dialog](#opening-and-closing-a-dialog)
   - [useRef and Forms](#useref-and-forms)
@@ -254,7 +255,6 @@ button {
   color: white;
 }
 
-
 ```
 
 ```js
@@ -284,7 +284,6 @@ const Room = () => {
 const rootElement = document.getElementById("root");
 ReactDOM.render(<Room />, rootElement);
 
-
 ```
 
 2. Create a RandomList component that shows a button, and a list of random numbers. When you click the button, add another random number to the list. Store the array of numbers with useState. The initial state should be an empty array.
@@ -298,16 +297,16 @@ const RandomList = () => {
   const [numbers, setNumbers] = useState([]);
 
   const addNumber = () => {
-    // The "updater" form (passing a function that receives the old state and returns the new one) is
+    // The "updater" method (passing a function that receives the old state and returns the new one) is
     // the safest choice when the new state depends on the old state. It guarantees that the old state
-    // won't be stale (which can happen if you're accessing old state from inside a closure).
+    // won't be stale.
     setNumbers(nums => [...nums, Math.random()]);
 
-    /* In this example, this would work too. Why won't "numbers" be stale, here, even though addNumber is a closure? */
+    // In this example, this would work too. 
     // setNumbers([...numbers, Math.random()]);
 
     /* This won't work, because pushing onto an array doesn't replace the original array,
-       and React won't re-render unless the state value looks new. Try it out: */
+       and React won't re-render unless the state value looks new. Test it: */
     // numbers.push(Math.random());
     // setNumbers(numbers);
   };
@@ -504,9 +503,7 @@ ReactDOM.render(
 
 ### State
 
-How do you decide what should go into state?
-
-As a general rule, data that is stored in state should be referenced inside render somewhere. Component state is for storing UI state – things that affect the visual rendering of the page. This makes sense because any time state is updated, the component will re-render.
+As a general rule, data that is stored in state should be referenced inside render. Component state is for storing UI state – things that affect the visual rendering of the page. This makes sense because any time state is updated, the component will re-render.
 
 If modifying a piece of data does not visually change the component, that data shouldn’t go into state. 
 
@@ -517,35 +514,36 @@ Some things that make sense to put in state:
 - Data from the server (a list of recipes, the number of “likes”) 
 - Open/closed state (modal open/closed, sidebar expanded/hidden)
 
-### Should Props Go in State?
+### Props in State?
 
-
-You should avoid copying props into state. It creates a second source of truth for your data, which usually leads to bugs. If you ever find yourself copying a prop into state and then thinking, “Now how am I going to keep this updated?” – take a step back and rethink.
-
+Avoid copying props into state. It creates a second source of truth for your data, which usually leads to bugs. If you ever find yourself copying a prop into state and then thinking, “Now how am I going to keep this updated?” – take a step back and rethink.
 
 Components automatically re-render when their parents do, and receive fresh props each time, so there’s no need to duplicate the props into state and then try to keep it up to date.
 
 ### Declarative Programming
 
-If you came from a framework or language where you primarily call functions to make things happen in a certain order (“imperative programming”), you need to adjust your mental model in order to work effectively with React. You’ll adjust pretty quickly with practice – you just need a few new examples or “patterns”
+If you came from a framework or language where you primarily call functions to make things happen in a certain order - imperative programming - you need to adjust your mental model in order to work effectively with React. 
 
-For example:
+### Examples
 
 #### Expanding/Collapsing an Accordion control
 
-The old way: Clicking a toggle button opens or closes the accordion by calling its toggle function.
+_The old way_: Clicking a toggle button opens or closes the accordion by calling its toggle function.
 The Accordion knows whether it is open or closed.
 
-The declarative way: The Accordion can be displayed in either the “open” state, or the “closed” state, and we store that information as a flag inside the parent component’s state (not inside the Accordion). We tell the Accordion which way to render by passing isOpen as a prop. When isOpen is true, it renders as open. When isOpen is false, it renders as closed.
+The declarative way: The Accordion can be displayed in either a 'open' or 'closed' state, and we store that information as a flag inside the parent component’s state (not inside the Accordion). We tell the Accordion which way to render by passing isOpen as a prop. 
+
+When isOpen is true, it renders as open. When isOpen is false, it renders as closed, e.g.:
 
 ```js
-<Accordion isOpen={true}/> // or
+<Accordion isOpen={true}/> 
+// or
 <Accordion isOpen={false}/>
 ```
 
 #### Opening and Closing a Dialog
 
-The old way: Clicking a button opens the modal. Clicking its Close button closes it.
+_The old way_: Clicking a button opens the modal. Clicking its Close button closes it.
 
 The declarative way: Whether or not the Modal is open is a state. It’s either in the “open” state or the “closed” state. So, if it’s “open”, we render the Modal. If it’s “closed” we don’t render the modal. Moreover, we can pass an onClose callback to the Modal – this way the parent component gets to decide what happens when the user clicks Close.
 
@@ -556,7 +554,7 @@ The declarative way: Whether or not the Modal is open is a state. It’s either 
 </div>
 ```
 
-Whenever you can, it’s best to keep components stateless. Components without state are easier to write, and easier to reason about. Sometimes this isn’t possible, but often, pieces of data you initially think should go into internal state can actually be lifted up to the parent component, or even higher.
+Whenever you can, it’s best to keep components stateless. Components without state are easier to write, and easier to reason about. Sometimes this isn’t possible, but often, pieces of data you initially think should go into internal state can actually be lifted up to the parent component, or higher.
 
 ## useRef and Forms
 
